@@ -1,20 +1,30 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+// eslint-disable-next-line import/no-unassigned-import
+import 'react-native-url-polyfill/auto';
+import {useState, useEffect} from 'react';
+import {View} from 'react-native';
+import type {Session} from '@supabase/supabase-js';
+import PageAccount from './src/pages/pageAccount/PageAccount';
+import PageAuth from './src/pages/pageAuth/PageAuth';
+import {supabase} from './src/lib/supabase/Supabase';
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+const App = () => {
+	const [session, setSession] = useState<Session | undefined>(undefined);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+	useEffect(() => {
+		void supabase.auth.getSession().then((data) => {
+			setSession(data.data.session ? data.data.session : undefined);
+		});
+
+		supabase.auth.onAuthStateChange((event, session) => {
+			setSession(session ? session : undefined);
+		});
+	}, []);
+
+	return (
+		<View>
+			{session?.user ? <PageAccount session={session} /> : <PageAuth />}
+		</View>
+	);
+};
+
+export default App;
